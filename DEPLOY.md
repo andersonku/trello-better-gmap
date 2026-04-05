@@ -72,6 +72,7 @@ You can find it on the project's **Overview** tab. Copy it — you'll need it in
    - **Workspace**: select the workspace where you want to use it
    - **Iframe connector URL**: `https://your-project-name.vercel.app/index.html`
 3. Under **Capabilities**, enable:
+   - `attachment-sections`
    - `format-url`
 4. Click **Save**.
 5. You'll land on the Power-Up's page — copy the **Power-Up ID** shown there (you may need it later).
