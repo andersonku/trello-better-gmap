@@ -81,12 +81,15 @@ window.TrelloPowerUp.initialize({
       });
 
 
-      t.api('/cards', 'POST', {
-        idList: t.board.lists[0].id,   // required
-        name: 'My New Card',         // optional
-        desc: 'Created by Power-Up', // optional
-        pos: 'bottom',                  // optional: 'top', 'bottom', or a number
-        urlSource: photo.url,
+      t.lists().then(function (lists) {
+        console.log(JSON.stringify(lists, null, 2));
+        return t.api('/cards', 'POST', {
+          idList: lists[0].id,   // required
+          name: 'My New Card',         // optional
+          desc: 'Created by Power-Up', // optional
+          urlSource: photo.url,
+          pos: 'bottom'                   // optional: 'top', 'bottom', or a number
+        });
       });
 
       return {
