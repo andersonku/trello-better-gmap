@@ -75,13 +75,15 @@ window.TrelloPowerUp.initialize({
     }
     return fetchVenuePhoto(options.url).then(function (photo) {
       if (!photo) throw t.NotHandled();
+
+      t.cards("all").then(function (cards) {
+        console.log(JSON.stringify(cards, null, 2));
+      });
+
       return {
         name: photo.name,
         url: photo.url,
         desc: photo.name,
-        attach: {
-          url: photo.url,
-        },
         image: {
           url: photo.url,
         }
