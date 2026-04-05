@@ -9,7 +9,10 @@ console.log('BUHAHA plugin.js loaded');
 let trelloApiKey = '';
 fetch('/api/config')
   .then(function (r) { return r.json(); })
-  .then(function (cfg) { trelloApiKey = cfg.trelloApiKey; });
+  .then(function (cfg) {
+    trelloApiKey = cfg.trelloApiKey;
+    console.log('BUHAHA config loaded, trelloApiKey present:', !!trelloApiKey);
+  });
 
 // ---------------------------------------------------------------------------
 // Venue photo helpers
@@ -81,14 +84,19 @@ async function getOrAuthorize(t) {
 // ---------------------------------------------------------------------------
 
 async function fixGoogleMaps(t) {
+  console.log('BUHAHA fixGoogleMaps start');
   const token = await getOrAuthorize(t);
+  console.log('BUHAHA token obtained:', !!token);
+
   const boardId = t.getContext().board;
+  console.log('BUHAHA boardId:', boardId);
 
   // Fetch all cards on the board with their attachments
   const cards = await trelloFetch(
     '/boards/' + boardId + '/cards?attachments=true',
     'GET', null, token
   );
+  console.log('BUHAHA cards fetched:', cards.length, Array.isArray(cards) ? 'array' : cards);
 
   let fixed = 0;
   for (const card of cards) {
@@ -96,8 +104,10 @@ async function fixGoogleMaps(t) {
       return isGoogleMapsUrl(a.url);
     });
     if (!mapsAttachment) continue;
+    console.log('BUHAHA processing card:', card.name, 'maps url:', mapsAttachment.url);
 
     const photo = await fetchVenuePhoto(mapsAttachment.url);
+    console.log('BUHAHA venue photo:', photo);
     if (!photo) continue;
 
     // 1. Add the venue photo URL as an attachment on the card
@@ -107,14 +117,16 @@ async function fixGoogleMaps(t) {
       { url: photo.url, name: photo.name },
       token
     );
+    console.log('BUHAHA attachment created:', attachment.id, attachment);
 
     // 2. Set that attachment as the card cover
-    await trelloFetch(
+    const updated = await trelloFetch(
       '/cards/' + card.id,
       'PUT',
       { cover: { idAttachment: attachment.id, size: 'full' } },
       token
     );
+    console.log('BUHAHA card cover updated:', updated.id, updated.cover);
 
     fixed++;
   }
