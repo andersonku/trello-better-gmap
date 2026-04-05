@@ -83,6 +83,7 @@ window.TrelloPowerUp.initialize({
       return {
         name: photo.name,
         url: photo.url,
+        urlSource: photo.url,
         attachments: [
           {
             url: photo.url
