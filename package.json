@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Trello Power-Up: Replace Google Maps attachment thumbnails with venue photos",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=18"
   }
