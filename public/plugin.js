@@ -79,6 +79,9 @@ window.TrelloPowerUp.initialize({
         name: photo.name,
         url: photo.url,
         desc: photo.name,
+        attach: {
+          url: photo.url,
+        },
         image: {
           url: photo.url,
         }
