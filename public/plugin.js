@@ -120,6 +120,7 @@ window.TrelloPowerUp.initialize({
         image: {
           url: photo.url,
           title: photo.name || 'Venue Photo',
+          size: 'cover',
         },
       };
     });
