@@ -45,7 +45,10 @@ window.TrelloPowerUp.initialize({
     if (!isGoogleMapsUrl(options.url)) return;
     return getVenuePhoto(t, options.url).then(function (photo) {
       if (!photo) return;
-      return { url: photo.url, title: photo.name || 'Venue Photo' };
+      return {
+        title: photo.name || 'Venue Photo',
+        image: { url: photo.url, logo: false },
+      };
     });
   },
 
