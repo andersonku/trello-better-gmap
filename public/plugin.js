@@ -83,6 +83,19 @@ function makeFixGoogleMaps(apiKey) {
         return isGoogleMapsUrl(a.url);
       });
       if (!mapsAttachment) continue;
+
+      // Skip if the card already has a venue photo as its cover
+      const coverAttachmentId = card.cover && card.cover.idAttachment;
+      if (coverAttachmentId) {
+        const coverAttachment = (card.attachments || []).find(function (a) {
+          return a.id === coverAttachmentId;
+        });
+        if (coverAttachment && coverAttachment.url.includes('googleusercontent.com')) {
+          console.log('BUHAHA skipping card (cover already set):', card.name);
+          continue;
+        }
+      }
+
       console.log('BUHAHA processing card:', card.name, mapsAttachment.url);
 
       const photo = await fetchVenuePhoto(mapsAttachment.url);
