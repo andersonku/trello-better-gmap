@@ -77,6 +77,8 @@ window.TrelloPowerUp.initialize({
       if (!photo) throw t.NotHandled();
       return {
         name: photo.name,
+        url: photo.url,
+        desc: photo.name,
         image: {
           url: photo.url,
           title: photo.name || 'Venue Photo',
