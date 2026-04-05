@@ -2,10 +2,9 @@ import { isGoogleMapsUrl } from './maps-url.js';
 
 console.log('BUHAHA plugin.js loaded');
 
-// Fetch venue photo from the Vercel proxy and cache it in Trello card data.
-// Returns { url, name } or null on failure.
-async function fetchAndCacheVenuePhoto(t, mapsUrl) {
-  console.log('BUHAHA fetchAndCacheVenuePhoto', mapsUrl);
+// Fetch venue photo from the Vercel proxy. Returns { url, name } or null.
+async function fetchVenuePhoto(mapsUrl) {
+  console.log('BUHAHA fetchVenuePhoto', mapsUrl);
   try {
     const res = await fetch('/api/places?url=' + encodeURIComponent(mapsUrl));
     console.log('BUHAHA response status', res.status);
@@ -21,13 +20,18 @@ async function fetchAndCacheVenuePhoto(t, mapsUrl) {
       console.warn('BUHAHA no photoUrl in response');
       return null;
     }
-    const photo = { url: photoUrl, name: placeName || '' };
-    await t.set('card', 'shared', 'venuePhoto', photo);
-    return photo;
+    return { url: photoUrl, name: placeName || '' };
   } catch (err) {
     console.error('BUHAHA fetch failed', err);
     return null;
   }
+}
+
+// Fetch and cache venue photo on the card. Requires a card context.
+async function fetchAndCacheVenuePhoto(t, mapsUrl) {
+  const photo = await fetchVenuePhoto(mapsUrl);
+  if (photo) await t.set('card', 'shared', 'venuePhoto', photo);
+  return photo;
 }
 
 // Return cached venue photo, or fetch it if not cached yet.
@@ -69,9 +73,15 @@ window.TrelloPowerUp.initialize({
     if (!isGoogleMapsUrl(options.url)) {
       throw t.NotHandled();
     }
-    return fetchAndCacheVenuePhoto(t, options.url).then(function (photo) {
+    return fetchVenuePhoto(options.url).then(function (photo) {
       if (!photo) throw t.NotHandled();
-      return { name: photo.name };
+      return {
+        name: photo.name,
+        image: {
+          url: photo.url,
+          title: photo.name || 'Venue Photo',
+        }
+      };
     });
   },
 
