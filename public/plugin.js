@@ -95,6 +95,9 @@ window.TrelloPowerUp.initialize({
       return {
         icon: 'https://www.google.com/favicon.ico',
         text: photo.name || 'Google Maps',
+        attach: {
+          url: photo.url,
+        },
         image: {
           url: photo.url,
           title: photo.name || 'Venue Photo',
