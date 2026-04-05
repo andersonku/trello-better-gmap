@@ -145,6 +145,21 @@ function makeFixGoogleMaps(apiKey) {
       }
 
       console.log('BUHAHA processing card (name is url):', card.name);
+
+      // Preserve the Google Maps URL as an attachment if not already present
+      const alreadyAttached = (card.attachments || []).some(function (a) {
+        return a.url === card.name;
+      });
+      if (!alreadyAttached) {
+        await trelloFetch(
+          '/cards/' + card.id + '/attachments',
+          'POST',
+          { url: card.name, name: card.name },
+          apiKey, token
+        );
+        console.log('BUHAHA added maps url as attachment:', card.name);
+      }
+
       if (await applyVenueCover(card, card.name, true)) fixed++;
     }
 
