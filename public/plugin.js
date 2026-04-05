@@ -89,8 +89,9 @@ function makeFixGoogleMaps(apiKey) {
         coverAttachment.mimeType && coverAttachment.mimeType.startsWith('image/'));
     }
 
-    // Fetches venue photo for mapsUrl and sets it as the card cover
-    async function applyVenueCover(card, mapsUrl) {
+    // Fetches venue photo for mapsUrl, sets it as the card cover,
+    // and optionally renames the card to the venue name.
+    async function applyVenueCover(card, mapsUrl, rename) {
       const photo = await fetchVenuePhoto(mapsUrl);
       console.log('BUHAHA venue photo for', card.name, ':', photo);
       if (!photo) return false;
@@ -103,13 +104,16 @@ function makeFixGoogleMaps(apiKey) {
       );
       console.log('BUHAHA attachment created:', attachment.id);
 
+      const cardUpdate = { cover: { idAttachment: attachment.id, size: 'full' } };
+      if (rename && photo.name) cardUpdate.name = photo.name;
+
       const updated = await trelloFetch(
         '/cards/' + card.id,
         'PUT',
-        { cover: { idAttachment: attachment.id, size: 'full' } },
+        cardUpdate,
         apiKey, token
       );
-      console.log('BUHAHA cover updated:', updated.cover);
+      console.log('BUHAHA cover updated:', updated.cover, 'name:', updated.name);
       return true;
     }
 
@@ -141,7 +145,7 @@ function makeFixGoogleMaps(apiKey) {
       }
 
       console.log('BUHAHA processing card (name is url):', card.name);
-      if (await applyVenueCover(card, card.name)) fixed++;
+      if (await applyVenueCover(card, card.name, true)) fixed++;
     }
 
     t.alert({
