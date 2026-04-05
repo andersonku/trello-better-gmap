@@ -37,7 +37,7 @@ async function getVenuePhoto(t, mapsUrl) {
   return fetchAndCacheVenuePhoto(t, mapsUrl);
 }
 
-TrelloPowerUp.initialize({
+window.TrelloPowerUp.initialize({
   // Overrides the attachment thumbnail for Google Maps URLs.
   // Takes priority over Trello's native Maps preview.
   'attachment-thumbnail': function (t, options) {
