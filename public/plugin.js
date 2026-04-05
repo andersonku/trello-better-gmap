@@ -38,16 +38,26 @@ async function getVenuePhoto(t, mapsUrl) {
 }
 
 window.TrelloPowerUp.initialize({
-  // Overrides the attachment thumbnail for Google Maps URLs.
-  // Takes priority over Trello's native Maps preview.
-  'attachment-thumbnail': function (t, options) {
-    console.log('BUHAHA attachment-thumbnail called', options.url);
-    if (!isGoogleMapsUrl(options.url)) return;
-    return getVenuePhoto(t, options.url).then(function (photo) {
-      if (!photo) return;
+  // Claims Google Maps attachments and renders a venue photo section
+  // on the card back. attachment-thumbnail is not called by Trello for
+  // Google Maps URLs since Trello handles those natively.
+  'attachment-sections': function (t, options) {
+    console.log('BUHAHA attachment-sections called', options.entries);
+    var claimed = options.entries.filter(function (a) {
+      return isGoogleMapsUrl(a.url);
+    });
+    if (!claimed.length) return [];
+    return claimed.map(function (attachment) {
       return {
-        title: photo.name || 'Venue Photo',
-        image: { url: photo.url, logo: false },
+        id: attachment.id,
+        claimed: [attachment],
+        icon: 'https://www.google.com/favicon.ico',
+        title: 'Venue Photo',
+        content: {
+          type: 'iframe',
+          url: t.signUrl('./section.html', { url: attachment.url }),
+          height: 260,
+        },
       };
     });
   },
