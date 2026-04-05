@@ -2,27 +2,28 @@ import { isGoogleMapsUrl } from './maps-url.js';
 
 console.log('BUHAHA plugin.js loaded');
 
+// ---------------------------------------------------------------------------
+// Config — fetch public Trello API key from server
+// ---------------------------------------------------------------------------
+
+let trelloApiKey = '';
+fetch('/api/config')
+  .then(function (r) { return r.json(); })
+  .then(function (cfg) { trelloApiKey = cfg.trelloApiKey; });
+
+// ---------------------------------------------------------------------------
+// Venue photo helpers
+// ---------------------------------------------------------------------------
+
 // Fetch venue photo from the Vercel proxy. Returns { url, name } or null.
 async function fetchVenuePhoto(mapsUrl) {
-  console.log('BUHAHA fetchVenuePhoto', mapsUrl);
   try {
     const res = await fetch('/api/places?url=' + encodeURIComponent(mapsUrl));
-    console.log('BUHAHA response status', res.status);
-    if (!res.ok) {
-      const text = await res.text();
-      console.error('BUHAHA api error', res.status, text);
-      return null;
-    }
-    const data = await res.json();
-    console.log('BUHAHA api data', data);
-    const { photoUrl, placeName } = data;
-    if (!photoUrl) {
-      console.warn('BUHAHA no photoUrl in response');
-      return null;
-    }
+    if (!res.ok) return null;
+    const { photoUrl, placeName } = await res.json();
+    if (!photoUrl) return null;
     return { url: photoUrl, name: placeName || '' };
-  } catch (err) {
-    console.error('BUHAHA fetch failed', err);
+  } catch {
     return null;
   }
 }
@@ -41,100 +42,132 @@ async function getVenuePhoto(t, mapsUrl) {
   return fetchAndCacheVenuePhoto(t, mapsUrl);
 }
 
+// ---------------------------------------------------------------------------
+// Trello REST API helpers
+// ---------------------------------------------------------------------------
+
+function trelloFetch(path, method, body, token) {
+  const sep = path.includes('?') ? '&' : '?';
+  const url = 'https://api.trello.com/1' + path + sep +
+    'key=' + trelloApiKey + '&token=' + token;
+  return fetch(url, {
+    method: method || 'GET',
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  }).then(function (r) { return r.json(); });
+}
+
+async function getOrAuthorize(t) {
+  let token = await t.loadSecret('token').catch(function () { return null; });
+  if (token) return token;
+
+  const authUrl = 'https://trello.com/1/authorize?' + [
+    'expiration=never',
+    'name=Better+Google+Maps',
+    'scope=read%2Cwrite',
+    'response_type=token',
+    'key=' + trelloApiKey,
+    'callback_method=postMessage',
+    'return_url=' + encodeURIComponent(window.location.origin),
+  ].join('&');
+
+  token = await t.authorize(authUrl, { height: 680, width: 580 });
+  await t.storeSecret('token', token);
+  return token;
+}
+
+// ---------------------------------------------------------------------------
+// Board button callback: Fix Google Maps
+// ---------------------------------------------------------------------------
+
+async function fixGoogleMaps(t) {
+  const token = await getOrAuthorize(t);
+  const boardId = t.getContext().board;
+
+  // Fetch all cards on the board with their attachments
+  const cards = await trelloFetch(
+    '/boards/' + boardId + '/cards?attachments=true',
+    'GET', null, token
+  );
+
+  let fixed = 0;
+  for (const card of cards) {
+    const mapsAttachment = (card.attachments || []).find(function (a) {
+      return isGoogleMapsUrl(a.url);
+    });
+    if (!mapsAttachment) continue;
+
+    const photo = await fetchVenuePhoto(mapsAttachment.url);
+    if (!photo) continue;
+
+    // 1. Add the venue photo URL as an attachment on the card
+    const attachment = await trelloFetch(
+      '/cards/' + card.id + '/attachments',
+      'POST',
+      { url: photo.url, name: photo.name },
+      token
+    );
+
+    // 2. Set that attachment as the card cover
+    await trelloFetch(
+      '/cards/' + card.id,
+      'PUT',
+      { cover: { idAttachment: attachment.id, size: 'full' } },
+      token
+    );
+
+    fixed++;
+  }
+
+  t.alert({
+    message: fixed
+      ? 'Done! Updated ' + fixed + ' card' + (fixed === 1 ? '' : 's') + '.'
+      : 'No cards with Google Maps attachments found.',
+    duration: 5,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Power-Up initialization
+// ---------------------------------------------------------------------------
+
 window.TrelloPowerUp.initialize({
-  // Claims Google Maps attachments and renders a venue photo section
-  // on the card back. attachment-thumbnail is not called by Trello for
-  // Google Maps URLs since Trello handles those natively.
-  // 'attachment-sections': function (t, options) {
-  //   console.log('BUHAHA attachment-sections called', options.entries);
-  //   var claimed = options.entries.filter(function (a) {
-  //     return isGoogleMapsUrl(a.url);
-  //   });
-  //   if (!claimed.length) return [];
-  //   return claimed.map(function (attachment) {
-  //     return {
-  //       id: attachment.id,
-  //       claimed: [attachment],
-  //       icon: 'https://www.google.com/favicon.ico',
-  //       title: 'Venue Photo',
-  //       content: {
-  //         type: 'iframe',
-  //         url: t.signUrl('./section.html', { url: attachment.url }),
-  //         height: 260,
-  //       },
-  //     };
-  //   });
-  // },
+  'board-buttons': function () {
+    return [{
+      icon: {
+        dark: 'https://www.google.com/favicon.ico',
+        light: 'https://www.google.com/favicon.ico',
+      },
+      text: 'Fix Google Maps',
+      callback: fixGoogleMaps,
+      condition: 'edit',
+    }];
+  },
 
   // When a Google Maps URL is pasted/dropped to create a new card,
-  // automatically sets the card name to the venue name.
+  // automatically sets the card name and image to the venue.
   'card-from-url': function (t, options) {
-    console.log('BUHAHA card-from-url called', options.url);
-    if (!isGoogleMapsUrl(options.url)) {
-      throw t.NotHandled();
-    }
+    if (!isGoogleMapsUrl(options.url)) throw t.NotHandled();
     return fetchVenuePhoto(options.url).then(function (photo) {
       if (!photo) throw t.NotHandled();
-
-      t.cards("all").then(function (cards) {
-        console.log(JSON.stringify(cards, null, 2));
-      });
-
-
-      t.lists().then(function (lists) {
-        console.log(JSON.stringify(lists, null, 2));
-        return t.api('/cards', 'POST', {
-          idList: lists[0].id,   // required
-          name: 'My New Card',         // optional
-          desc: 'Created by Power-Up', // optional
-          urlSource: photo.url,
-          pos: 'bottom'                   // optional: 'top', 'bottom', or a number
-        });
-      });
-
       return {
         name: photo.name,
-        url: photo.url,
-        urlSource: photo.url,
-        attachments: [
-          {
-            url: photo.url
-          }
-        ],
-        cover: {
-          date: "2026-04-04T21:51:26.635Z",
-          edgeColor: "#c2b28e",
-          id: "69d187dea3249afdd4e72a3c",
-          idMember: "60ba172537c4e06b86edfcf6",
-          name: "AHVAwerHkzZCmxwQqwF-H936C_lZSaIYd1jn53X61IUHjSXcbgXwU40ULAL-kvZY-NzXOL85YU2Z2HwGxoOyg8ndse1LugsOMlw-Zo1u4DDPurpdPfYWY3jqiIj3Q8GIjBpqclTRZoQgtQ=w426-h240-k-no.jpeg",
-          previews: [],
-          url: photo.url
-        },
         desc: photo.name,
-        image: {
-          url: photo.url,
-        }
+        url: photo.url,
+        image: { url: photo.url },
       };
     });
   },
 
   // Handles Google Maps URLs appearing in descriptions and comments.
   'format-url': function (t, options) {
-    console.log('BUHAHA format-url called', options.url);
     if (!isGoogleMapsUrl(options.url)) return;
     return getVenuePhoto(t, options.url).then(function (photo) {
       if (!photo) return;
       return {
         icon: 'https://www.google.com/favicon.ico',
         text: photo.name || 'Google Maps',
-        attach: {
-          url: photo.url,
-        },
-        image: {
-          url: photo.url,
-          title: photo.name || 'Venue Photo',
-          size: 'cover',
-        },
+        image: { url: photo.url, title: photo.name || 'Venue Photo' },
       };
     });
   },
