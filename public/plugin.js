@@ -76,6 +76,7 @@ function makeFixGoogleMaps(apiKey) {
       'GET', null, apiKey, token
     );
     console.log('BUHAHA cards fetched:', Array.isArray(cards) ? cards.length : cards);
+    console.log('BUHAHA cards:', JSON.stringify(cards, null, 2));
 
     let fixed = 0;
     for (const card of cards) {
