@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Authorizing…</title>
+</head>
+<body>
+<script>
+  // Trello redirects here after OAuth with the token in the URL hash: #token=xxx
+  var match = (window.location.hash || window.location.search).match(/[#&?]token=([^&]+)/);
+  if (match) {
+    window.opener.postMessage(JSON.stringify({ token: match[1] }), window.location.origin);
+    window.close();
+  } else {
+    document.body.innerText = 'Authorization failed. You can close this window.';
+  }
+</script>
+</body>
+</html>

@@ -64,6 +64,7 @@ async function getOrAuthorize(t) {
   let token = await t.loadSecret('token').catch(function () { return null; });
   if (token) return token;
 
+  const returnUrl = window.location.origin + '/authorize.html';
   const authUrl = 'https://trello.com/1/authorize?' + [
     'expiration=never',
     'name=Better+Google+Maps',
@@ -71,8 +72,9 @@ async function getOrAuthorize(t) {
     'response_type=token',
     'key=' + trelloApiKey,
     'callback_method=postMessage',
-    'return_url=' + encodeURIComponent(window.location.origin),
+    'return_url=' + encodeURIComponent(returnUrl),
   ].join('&');
+  console.log('BUHAHA authUrl:', authUrl);
 
   token = await t.authorize(authUrl, { height: 680, width: 580 });
   await t.storeSecret('token', token);
