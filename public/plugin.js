@@ -1,9 +1,4 @@
-// Matches all common Google Maps URL forms, including short links
-const GOOGLE_MAPS_RE = /https?:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|goo\.gl\/maps|maps\.app\.goo\.gl)/;
-
-function isGoogleMapsUrl(url) {
-  return GOOGLE_MAPS_RE.test(url);
-}
+import { isGoogleMapsUrl } from './maps-url.js';
 
 // Fetch venue photo from the Vercel proxy and cache it in Trello card data.
 // Returns { url, name } or null on failure.
