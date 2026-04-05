@@ -6,17 +6,29 @@ function isGoogleMapsUrl(url) {
 }
 
 // Fetch venue photo from the Vercel proxy and cache it in Trello card data.
-// Returns { photoUrl, placeName } or null on failure.
+// Returns { url, name } or null on failure.
 async function fetchAndCacheVenuePhoto(t, mapsUrl) {
+  console.log('BUHAHA fetchAndCacheVenuePhoto', mapsUrl);
   try {
     const res = await fetch('/api/places?url=' + encodeURIComponent(mapsUrl));
-    if (!res.ok) return null;
-    const { photoUrl, placeName } = await res.json();
-    if (!photoUrl) return null;
+    console.log('BUHAHA response status', res.status);
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('BUHAHA api error', res.status, text);
+      return null;
+    }
+    const data = await res.json();
+    console.log('BUHAHA api data', data);
+    const { photoUrl, placeName } = data;
+    if (!photoUrl) {
+      console.warn('BUHAHA no photoUrl in response');
+      return null;
+    }
     const photo = { url: photoUrl, name: placeName || '' };
     await t.set('card', 'shared', 'venuePhoto', photo);
     return photo;
-  } catch {
+  } catch (err) {
+    console.error('BUHAHA fetch failed', err);
     return null;
   }
 }
@@ -29,6 +41,17 @@ async function getVenuePhoto(t, mapsUrl) {
 }
 
 TrelloPowerUp.initialize({
+  // Overrides the attachment thumbnail for Google Maps URLs.
+  // Takes priority over Trello's native Maps preview.
+  'attachment-thumbnail': function (t, options) {
+    if (!isGoogleMapsUrl(options.url)) return;
+    return getVenuePhoto(t, options.url).then(function (photo) {
+      if (!photo) return;
+      return { url: photo.url, title: photo.name || 'Venue Photo' };
+    });
+  },
+
+  // Handles Google Maps URLs appearing in descriptions and comments.
   'format-url': function (t, options) {
     if (!isGoogleMapsUrl(options.url)) return;
     return getVenuePhoto(t, options.url).then(function (photo) {
