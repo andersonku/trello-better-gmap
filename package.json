@@ -1,0 +1,9 @@
+{
+  "name": "trello-better-gmap",
+  "version": "1.0.0",
+  "description": "Trello Power-Up: Replace Google Maps attachment thumbnails with venue photos",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
