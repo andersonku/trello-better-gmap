@@ -78,32 +78,23 @@ function makeFixGoogleMaps(apiKey) {
     console.log('BUHAHA cards fetched:', Array.isArray(cards) ? cards.length : cards);
     console.log('BUHAHA cards:', JSON.stringify(cards, null, 2));
 
-    let fixed = 0;
-    for (const card of cards) {
-      const mapsAttachment = (card.attachments || []).find(function (a) {
-        return isGoogleMapsUrl(a.url);
-      });
-      if (!mapsAttachment) continue;
-
-      // Skip if the card already has an uploaded image as its cover
+    // Returns true if the card already has an uploaded image as its cover
+    function hasImageCover(card) {
       const coverAttachmentId = card.cover && card.cover.idAttachment;
-      if (coverAttachmentId) {
-        const coverAttachment = (card.attachments || []).find(function (a) {
-          return a.id === coverAttachmentId;
-        });
-        if (coverAttachment && coverAttachment.isUpload && coverAttachment.mimeType && coverAttachment.mimeType.startsWith('image/')) {
-          console.log('BUHAHA skipping card (cover already set):', card.name);
-          continue;
-        }
-      }
+      if (!coverAttachmentId) return false;
+      const coverAttachment = (card.attachments || []).find(function (a) {
+        return a.id === coverAttachmentId;
+      });
+      return !!(coverAttachment && coverAttachment.isUpload &&
+        coverAttachment.mimeType && coverAttachment.mimeType.startsWith('image/'));
+    }
 
-      console.log('BUHAHA processing card:', card.name, mapsAttachment.url);
+    // Fetches venue photo for mapsUrl and sets it as the card cover
+    async function applyVenueCover(card, mapsUrl) {
+      const photo = await fetchVenuePhoto(mapsUrl);
+      console.log('BUHAHA venue photo for', card.name, ':', photo);
+      if (!photo) return false;
 
-      const photo = await fetchVenuePhoto(mapsAttachment.url);
-      console.log('BUHAHA venue photo:', photo);
-      if (!photo) continue;
-
-      // 1. Add venue photo as an attachment
       const attachment = await trelloFetch(
         '/cards/' + card.id + '/attachments',
         'POST',
@@ -112,7 +103,6 @@ function makeFixGoogleMaps(apiKey) {
       );
       console.log('BUHAHA attachment created:', attachment.id);
 
-      // 2. Set it as the card cover
       const updated = await trelloFetch(
         '/cards/' + card.id,
         'PUT',
@@ -120,8 +110,38 @@ function makeFixGoogleMaps(apiKey) {
         apiKey, token
       );
       console.log('BUHAHA cover updated:', updated.cover);
+      return true;
+    }
 
-      fixed++;
+    let fixed = 0;
+
+    // Loop 1: cards that have a Google Maps URL as an attachment
+    for (const card of cards) {
+      const mapsAttachment = (card.attachments || []).find(function (a) {
+        return isGoogleMapsUrl(a.url);
+      });
+      if (!mapsAttachment) continue;
+
+      if (hasImageCover(card)) {
+        console.log('BUHAHA skipping card (cover already set):', card.name);
+        continue;
+      }
+
+      console.log('BUHAHA processing card (attachment):', card.name, mapsAttachment.url);
+      if (await applyVenueCover(card, mapsAttachment.url)) fixed++;
+    }
+
+    // Loop 2: cards whose name is itself a Google Maps URL
+    for (const card of cards) {
+      if (!isGoogleMapsUrl(card.name)) continue;
+
+      if (hasImageCover(card)) {
+        console.log('BUHAHA skipping card (cover already set):', card.name);
+        continue;
+      }
+
+      console.log('BUHAHA processing card (name is url):', card.name);
+      if (await applyVenueCover(card, card.name)) fixed++;
     }
 
     t.alert({
