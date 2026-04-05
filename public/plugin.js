@@ -45,26 +45,26 @@ window.TrelloPowerUp.initialize({
   // Claims Google Maps attachments and renders a venue photo section
   // on the card back. attachment-thumbnail is not called by Trello for
   // Google Maps URLs since Trello handles those natively.
-  'attachment-sections': function (t, options) {
-    console.log('BUHAHA attachment-sections called', options.entries);
-    var claimed = options.entries.filter(function (a) {
-      return isGoogleMapsUrl(a.url);
-    });
-    if (!claimed.length) return [];
-    return claimed.map(function (attachment) {
-      return {
-        id: attachment.id,
-        claimed: [attachment],
-        icon: 'https://www.google.com/favicon.ico',
-        title: 'Venue Photo',
-        content: {
-          type: 'iframe',
-          url: t.signUrl('./section.html', { url: attachment.url }),
-          height: 260,
-        },
-      };
-    });
-  },
+  // 'attachment-sections': function (t, options) {
+  //   console.log('BUHAHA attachment-sections called', options.entries);
+  //   var claimed = options.entries.filter(function (a) {
+  //     return isGoogleMapsUrl(a.url);
+  //   });
+  //   if (!claimed.length) return [];
+  //   return claimed.map(function (attachment) {
+  //     return {
+  //       id: attachment.id,
+  //       claimed: [attachment],
+  //       icon: 'https://www.google.com/favicon.ico',
+  //       title: 'Venue Photo',
+  //       content: {
+  //         type: 'iframe',
+  //         url: t.signUrl('./section.html', { url: attachment.url }),
+  //         height: 260,
+  //       },
+  //     };
+  //   });
+  // },
 
   // When a Google Maps URL is pasted/dropped to create a new card,
   // automatically sets the card name to the venue name.
