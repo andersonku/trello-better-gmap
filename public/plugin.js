@@ -89,6 +89,12 @@ window.TrelloPowerUp.initialize({
           }
         ],
         cover: {
+          date: "2026-04-04T21:51:26.635Z",
+          edgeColor: "#c2b28e",
+          id: "69d187dea3249afdd4e72a3c",
+          idMember: "60ba172537c4e06b86edfcf6",
+          name: "AHVAwerHkzZCmxwQqwF-H936C_lZSaIYd1jn53X61IUHjSXcbgXwU40ULAL-kvZY-NzXOL85YU2Z2HwGxoOyg8ndse1LugsOMlw-Zo1u4DDPurpdPfYWY3jqiIj3Q8GIjBpqclTRZoQgtQ=w426-h240-k-no.jpeg",
+          previews: [],
           url: photo.url
         },
         desc: photo.name,
