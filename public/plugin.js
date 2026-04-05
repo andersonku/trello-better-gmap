@@ -62,6 +62,19 @@ window.TrelloPowerUp.initialize({
     });
   },
 
+  // When a Google Maps URL is pasted/dropped to create a new card,
+  // automatically sets the card name to the venue name.
+  'card-from-url': function (t, options) {
+    console.log('BUHAHA card-from-url called', options.url);
+    if (!isGoogleMapsUrl(options.url)) {
+      throw t.NotHandled();
+    }
+    return fetchAndCacheVenuePhoto(t, options.url).then(function (photo) {
+      if (!photo) throw t.NotHandled();
+      return { name: photo.name };
+    });
+  },
+
   // Handles Google Maps URLs appearing in descriptions and comments.
   'format-url': function (t, options) {
     console.log('BUHAHA format-url called', options.url);
