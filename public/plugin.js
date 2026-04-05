@@ -85,13 +85,13 @@ function makeFixGoogleMaps(apiKey) {
       });
       if (!mapsAttachment) continue;
 
-      // Skip if the card already has a venue photo as its cover
+      // Skip if the card already has an uploaded image as its cover
       const coverAttachmentId = card.cover && card.cover.idAttachment;
       if (coverAttachmentId) {
         const coverAttachment = (card.attachments || []).find(function (a) {
           return a.id === coverAttachmentId;
         });
-        if (coverAttachment && coverAttachment.url.includes('googleusercontent.com')) {
+        if (coverAttachment && coverAttachment.isUpload && coverAttachment.mimeType && coverAttachment.mimeType.startsWith('image/')) {
           console.log('BUHAHA skipping card (cover already set):', card.name);
           continue;
         }
