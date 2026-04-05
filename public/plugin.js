@@ -81,7 +81,6 @@ window.TrelloPowerUp.initialize({
         desc: photo.name,
         image: {
           url: photo.url,
-          title: photo.name || 'Venue Photo',
         }
       };
     });
