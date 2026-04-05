@@ -104,7 +104,7 @@ function makeFixGoogleMaps(apiKey) {
       );
       console.log('BUHAHA attachment created:', attachment.id);
 
-      const cardUpdate = { cover: { idAttachment: attachment.id, size: 'full' } };
+      const cardUpdate = { cover: { idAttachment: attachment.id, size: 'full' }, url: mapsUrl };
       if (rename && photo.name) cardUpdate.name = photo.name;
 
       const updated = await trelloFetch(
