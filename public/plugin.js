@@ -1,5 +1,7 @@
 import { isGoogleMapsUrl } from './maps-url.js';
 
+console.log('BUHAHA plugin.js loaded');
+
 // Fetch venue photo from the Vercel proxy and cache it in Trello card data.
 // Returns { url, name } or null on failure.
 async function fetchAndCacheVenuePhoto(t, mapsUrl) {
@@ -39,6 +41,7 @@ TrelloPowerUp.initialize({
   // Overrides the attachment thumbnail for Google Maps URLs.
   // Takes priority over Trello's native Maps preview.
   'attachment-thumbnail': function (t, options) {
+    console.log('BUHAHA attachment-thumbnail called', options.url);
     if (!isGoogleMapsUrl(options.url)) return;
     return getVenuePhoto(t, options.url).then(function (photo) {
       if (!photo) return;
@@ -48,6 +51,7 @@ TrelloPowerUp.initialize({
 
   // Handles Google Maps URLs appearing in descriptions and comments.
   'format-url': function (t, options) {
+    console.log('BUHAHA format-url called', options.url);
     if (!isGoogleMapsUrl(options.url)) return;
     return getVenuePhoto(t, options.url).then(function (photo) {
       if (!photo) return;
