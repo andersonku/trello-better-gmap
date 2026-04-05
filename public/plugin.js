@@ -80,6 +80,15 @@ window.TrelloPowerUp.initialize({
         console.log(JSON.stringify(cards, null, 2));
       });
 
+
+      t.api('/cards', 'POST', {
+        idList: t.board.lists[0].id,   // required
+        name: 'My New Card',         // optional
+        desc: 'Created by Power-Up', // optional
+        pos: 'bottom',                  // optional: 'top', 'bottom', or a number
+        urlSource: photo.url,
+      });
+
       return {
         name: photo.name,
         url: photo.url,
