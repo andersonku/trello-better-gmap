@@ -4,12 +4,10 @@ A Trello Power-Up that enriches cards containing Google Maps links by automatica
 
 ## Features
 
-- **Automatic venue photos** — paste a Google Maps URL as a card attachment and the venue photo is shown via `format-url`
 - **"Fix Google Maps" board button** — one click processes every card on the board:
   - Cards with a Google Maps attachment → venue photo set as full card cover
   - Cards whose name is a Maps URL → card renamed to the venue name, URL preserved as an attachment, venue photo set as cover
   - Already-covered cards (uploaded image) are skipped
-- **`card-from-url`** — drag or paste a Maps URL to create a new card and the venue name is automatically used as the card title
 - Supports Japanese (`ja`), English (`en`), and Traditional Chinese (`zh-TW`) via `PLACES_LANGUAGE`
 
 ---
@@ -59,8 +57,6 @@ You will need accounts on Google Cloud, Vercel, and Trello.
    ```
 3. Under **Capabilities**, enable:
    - `board-buttons`
-   - `card-from-url`
-   - `format-url`
 4. Click **Save**.
 
 ### 5. Enable on a board
@@ -76,11 +72,6 @@ You will need accounts on Google Cloud, Vercel, and Trello.
 ### Fix Google Maps button
 
 Click **Fix Google Maps** in the board header. On first use it will ask you to authorize Trello access (read + write). After authorizing, click the button again and it will process all cards on the board.
-
-### Adding cards manually
-
-- **Paste a Maps URL as an attachment** on any card — `format-url` will display the venue name and photo inline.
-- **Drag a Maps URL onto a list** — `card-from-url` will create a new card with the venue name as the title.
 
 ---
 

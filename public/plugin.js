@@ -18,18 +18,6 @@ async function fetchVenuePhoto(mapsUrl) {
   }
 }
 
-async function fetchAndCacheVenuePhoto(t, mapsUrl) {
-  const photo = await fetchVenuePhoto(mapsUrl);
-  if (photo) await t.set('card', 'shared', 'venuePhoto', photo);
-  return photo;
-}
-
-async function getVenuePhoto(t, mapsUrl) {
-  const cached = await t.get('card', 'shared', 'venuePhoto');
-  if (cached && cached.url) return cached;
-  return fetchAndCacheVenuePhoto(t, mapsUrl);
-}
-
 // ---------------------------------------------------------------------------
 // Trello REST API helpers
 // ---------------------------------------------------------------------------
@@ -196,30 +184,6 @@ fetch('/api/config')
           }];
         },
 
-        'card-from-url': function (t, options) {
-          if (!isGoogleMapsUrl(options.url)) throw t.NotHandled();
-          return fetchVenuePhoto(options.url).then(function (photo) {
-            if (!photo) throw t.NotHandled();
-            return {
-              name: photo.name,
-              desc: photo.name,
-              url: photo.url,
-              image: { url: photo.url },
-            };
-          });
-        },
-
-        'format-url': function (t, options) {
-          if (!isGoogleMapsUrl(options.url)) return;
-          return getVenuePhoto(t, options.url).then(function (photo) {
-            if (!photo) return;
-            return {
-              icon: 'https://www.google.com/favicon.ico',
-              text: photo.name || 'Google Maps',
-              image: { url: photo.url, title: photo.name || 'Venue Photo' },
-            };
-          });
-        },
       },
       {
         appKey: apiKey,
